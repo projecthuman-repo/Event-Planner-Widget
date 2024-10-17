@@ -1,0 +1,6 @@
+# Event-Planner-Widget
+The event space preview tool is a user-friendly interface designed to streamline event planning. Users can effortlessly move, adjust, and place assets like chairs, tables, and decor to create their ideal event layout. This tool features a grid board for drag-and-drop asset placement, allowing users to resize, rotate, and snap assets to the grid for precise alignment. The asset library is organized for easy navigation, and the property panel enables users to adjust asset details such as size and capacity.
+
+The tool also calculates the total room capacity based on the placed assets and provides warnings if the room exceeds its limits. Asset distribution is managed through a structured JSON file that stores details like asset type, size, position, rotation, and capacity. This JSON file is loaded into the frontend to display the layout, and users' changes are saved back into the JSON file for seamless sharing and collaboration.
+
+The backend handles the storage and retrieval of these JSON files using RESTful API endpoints to manage event space layouts. To ensure assets do not overlap with each other or the room's walls, room dimensions are defined in the JSON file, and collision detection is implemented. This robust, adaptable, and user-friendly tool is ideal for various event planning needs.

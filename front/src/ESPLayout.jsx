@@ -1,4 +1,3 @@
-// src/ESPLayout.jsx
 import React, { useState } from 'react';
 import GridBoard from './GridBoard';
 import DraggableGridItem from './DraggableGridItem';
@@ -11,10 +10,54 @@ function ESPLayout() {
     { id: 'chair', type: 'Chair', imageUrl: 'https://via.placeholder.com/50?text=Chair' },
     { id: 'lamp', type: 'Lamp', imageUrl: 'https://via.placeholder.com/50?text=Lamp' },
     { id: 'podium', type: 'Podium', imageUrl: 'https://via.placeholder.com/50?text=Podium' },
-    // Add more items here if needed
   ]);
 
   const [placedItems, setPlacedItems] = useState([]);
+  const [selectedItemId, setSelectedItemId] = useState(null);
+  const [itemSize, setItemSize] = useState({ width: 100, height: 100 });
+
+  const handleDrop = (item, newPosition) => {
+    const existingItem = placedItems.find((placedItem) => placedItem.id === item.id);
+  
+    if (existingItem) {
+      setPlacedItems((prevItems) =>
+        prevItems.map((placedItem) =>
+          placedItem.id === item.id
+            ? { ...placedItem, x: newPosition.x, y: newPosition.y }
+            : placedItem
+        )
+      );
+    } else {
+      setPlacedItems((prevItems) => [
+        ...prevItems,
+        {
+          ...item,
+          id: `${item.id}-${prevItems.length}`,
+          x: newPosition.x,
+          y: newPosition.y,
+          width: itemSize.width,
+          height: itemSize.height,
+          dropped: true,
+        },
+      ]);
+    }
+  };
+  
+  
+
+  const handleApplySize = () => {
+    setPlacedItems((prevItems) =>
+      prevItems.map((item) =>
+        item.id === selectedItemId ? { ...item, width: itemSize.width, height: itemSize.height } : item
+      )
+    );
+    setSelectedItemId(null); // Deselect the item to hide the size changer
+  };
+
+  const deleteItem = (id) => {
+    setPlacedItems((prevItems) => prevItems.filter((item) => item.id !== id));
+    setSelectedItemId(null); // Deselect the item
+  };
 
   return (
     <DndProvider backend={HTML5Backend}>
@@ -34,7 +77,16 @@ function ESPLayout() {
             </ul>
           </aside>
           <main className="flex-1 p-4">
-            <GridBoard placedItems={placedItems} setPlacedItems={setPlacedItems} />
+            <GridBoard
+              placedItems={placedItems}
+              onDrop={handleDrop}
+              selectedItemId={selectedItemId}
+              setSelectedItemId={setSelectedItemId}
+              itemSize={itemSize}
+              setItemSize={setItemSize}
+              handleApplySize={handleApplySize}
+              deleteItem={deleteItem} // Pass delete function to GridBoard
+            />
           </main>
         </div>
       </div>

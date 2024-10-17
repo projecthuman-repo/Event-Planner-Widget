@@ -10,6 +10,11 @@ body {
   flex-direction: column;
   height: 100vh;
 }
+/* src/App.css */
+.slider {
+  width: 100px;
+}
+
 
 header {
   background-color: #333;

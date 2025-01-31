@@ -1,15 +1,19 @@
-// src/App.tsx
-import React from 'react';
-import Sidebar from './components/Sidebar';
-import CanvasBoard from './components/Canvasboard.tsx';
+import './App.css'
+import EventSection from './components/eventComponents/EventSection'
+import LeftSection from './components/LeftSection'
+import Navbar from './components/Navbar'
 
-const App: React.FC = () => {
+function App() {
+
   return (
-    <div style={{ display: 'flex', height: '100vh' }}>
-      <Sidebar />
-      <CanvasBoard />
+    <div className='w-[100vw] h-[100vh]'>
+      <Navbar />
+      <div className='flex w-[100%] h-[90vh]'>
+        <LeftSection />
+        <EventSection />
+      </div>
     </div>
-  );
-};
+  )
+}
 
-export default App;
+export default App

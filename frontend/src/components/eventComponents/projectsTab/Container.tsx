@@ -17,7 +17,7 @@ const Container: React.FunctionComponent<ContainerProps> = ({ type, label, icon 
   }));
 
   return (
-    <div ref={drag} className={`bg-green-200 w-[40px] h-[40px] content-center place-items-center ${isDragging ? "opacity-50" : "opacity-100"}`} >
+    <div ref={drag} className={`bg-green-200 w-[40px] h-[40px] content-center place-items-center hover:cursor-pointer ${isDragging ? "opacity-50" : "opacity-100"}`} >
       {icon}
     </div>
   );

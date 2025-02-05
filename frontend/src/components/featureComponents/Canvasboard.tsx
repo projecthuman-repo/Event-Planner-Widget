@@ -1,57 +1,72 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as fabric from "fabric";
 import { useDrop } from "react-dnd";
+import { FaMinus, FaPlus } from "react-icons/fa";
 
 const CanvasBoard: React.FC = () => {
   const canvasRef = useRef<fabric.Canvas | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
+  // const [canvasbackground, setCanvasBackground] = useState<string | null>(null);
 
-  // Drag & Drop for Furniture
+  // React DND Drop logic
   const [, drop] = useDrop(() => ({
-    accept: ["chair", "table"],
+    accept: ["Chair", "Table"],
     drop: (item: { type: string; label: string }, monitor) => {
       if (!canvasRef.current) return;
-  
+
       const clientOffset = monitor.getClientOffset();
-      if (clientOffset) {
+      if (clientOffset && canvasRef.current) {
         const pointer = canvasRef.current.getPointer({
           clientX: clientOffset.x,
           clientY: clientOffset.y,
         } as MouseEvent);
-  
+
         const rect = new fabric.Rect({
           left: pointer.x,
           top: pointer.y,
-          fill: item.type === "chair" ? "blue" : "green",
+          fill: item.type === "Chair" ? "blue" : "green",
           width: 50,
           height: 50,
-          selectable: true,
         });
-  
         canvasRef.current.add(rect);
         canvasRef.current.renderAll();
       }
     },
   }));
 
+  // Initialize Fabric.js canvas
   useEffect(() => {
+    const canvasElement = document.getElementById("canvas");
     const canvas = new fabric.Canvas("canvas", {
-      width: 800,
-      height: 600,
+      width: canvasElement?.clientWidth,
+      height: canvasElement?.clientHeight,
       backgroundColor: "#fff",
     });
     canvasRef.current = canvas;
 
+    // Event listener for delete key
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (
+        (event.key === "Delete" || event.key === "Backspace") &&
+        canvas.getActiveObject()
+      ) {
+        canvas.remove(canvas.getActiveObject()!);
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+
     // Fetch stored background image from backend
     const fetchFloorPlan = async () => {
       try {
-        const res = await fetch("http://localhost:3000/api/export/get-floorplan");
+        const res = await fetch(
+          "http://localhost:3000/api/export/get-floorplan"
+        );
         const data = await res.json();
 
         if (data.imageUrl) {
           setBackgroundImage(`http://localhost:3000${data.imageUrl}`);
-          setCanvasBackground(`http://localhost:3000${data.imageUrl}`);
+          // setCanvasBackground(`http://localhost:3000${data.imageUrl}`);
         }
       } catch (error) {
         console.error("Error fetching floor plan:", error);
@@ -60,8 +75,10 @@ const CanvasBoard: React.FC = () => {
 
     fetchFloorPlan();
 
+    // Clean up on unmount
     return () => {
       canvas.dispose();
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
 
@@ -105,10 +122,13 @@ const CanvasBoard: React.FC = () => {
     formData.append("floorPlan", selectedFile);
 
     try {
-      const response = await fetch("http://localhost:3000/api/export/upload-floorplan", {
-        method: "POST",
-        body: formData,
-      });
+      const response = await fetch(
+        "http://localhost:3000/api/export/upload-floorplan",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
       const result = await response.json();
       if (result.imageUrl) {
@@ -137,41 +157,51 @@ const CanvasBoard: React.FC = () => {
     }
   };
 
-  // Export Canvas to Backend
+  // Function to export canvas as an image
   const exportCanvas = async () => {
     if (!canvasRef.current) return;
 
-    try {
+    if (canvasRef.current) {
       const dataURL = canvasRef.current.toDataURL({
         format: "png",
         quality: 1.0,
-        multiplier: 2, 
+        multiplier: 2,
         enableRetinaScaling: true,
       });
 
-      const response = await fetch("http://localhost:3000/api/export", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ layoutData: dataURL }),
-      });
+      try {
+        // Send data to the backend
+        const response = await fetch("http://localhost:3000/api/export", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ layoutData: dataURL }),
+        });
 
-      const result = await response.json();
-      if (result.imageUrl) {
+        if (!response.ok) {
+          throw new Error("Failed to export canvas to the backend");
+        }
+
+        const result = await response.json();
+        console.log(result.message);
+        alert("Canvas exported successfully to the backend!");
+        
         const link = document.createElement("a");
-        link.href = `http://localhost:3000${result.imageUrl}`;
+        link.href = dataURL;
         link.download = "canvas-export.png";
-        document.body.appendChild(link);
+        //document.body.appendChild(link);
         link.click();
+
+      } catch (error) {
+        console.error("Failed to export canvas:", error);
       }
-    } catch (error) {
-      console.error("Failed to export canvas:", error);
+    } else {
+      console.error("Canvas is not initialized!");
     }
   };
 
   return (
-    <div ref={drop} style={{ flex: 1, padding: "20px", border: "2px solid #ccc", minHeight: "700px", display: "flex", flexDirection: "column", alignItems: "center" }}>
-      {/* Upload Section */}
-      <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center", marginBottom: "20px" }}>
+    <div ref={drop} className="w-[99%] h-[90%] mt-1 ml-2">
+      {/* <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center", marginBottom: "20px" }}>
         <input type="file" accept="image/*" onChange={handleFileSelect} style={{ marginBottom: "10px", padding: "5px", border: "1px solid #ccc", borderRadius: "5px", width: "250px" }} />
 
         <button onClick={handleUploadBackground} style={{ padding: "10px 20px", backgroundColor: "#28a745", color: "#fff", borderRadius: "5px", cursor: "pointer", width: "200px" }}>
@@ -183,15 +213,35 @@ const CanvasBoard: React.FC = () => {
             Remove Background
           </button>
         )}
+      </div> */}
+      <canvas
+        id="canvas"
+        className="w-[100%] h-[100%] border-2 border-gray-400"
+      />
+      <div className="flex h-[10%] w-[100%] place-items-center">
+        <div className="w-[130px]">
+          <button
+            onClick={exportCanvas}
+            className="bg-[#007BFF] p-1 pl-2 pr-2 rounded-[10px] text-white font-bold cursor-pointer"
+          >
+            Export Canvas
+          </button>
+        </div>
+        <div className="flex gap-3 w-[calc(100%-130px)] place-items-center place-content-center justify-center text-center">
+          <button className="place-items-center place-content-center cursor-pointer">
+            <FaPlus />
+            <div className="text-[10px]">Zoom In</div>
+          </button>
+          <button className="place-items-center place-content-center cursor-pointer">
+            <FaMinus />
+            <div className="text-[10px]">Zoom Out</div>
+          </button>
+          <input type="file" accept="image/*" onChange={handleFileSelect} />
+          <button onClick={handleUploadBackground} style={{ padding: "10px 20px", backgroundColor: "#28a745", color: "#fff", borderRadius: "5px", cursor: "pointer", width: "200px" }}>
+          Upload Floor Plan
+        </button>
+        </div>
       </div>
-
-      {/* Canvas */}
-      <canvas id="canvas" style={{ border: "1px solid #ccc", maxWidth: "100%", width: "800px", height: "600px" }} />
-
-      {/* Export Button */}
-      <button onClick={exportCanvas} style={{ marginTop: "20px", padding: "10px 20px", backgroundColor: "#007BFF", color: "#fff", borderRadius: "5px", cursor: "pointer", width: "200px" }}>
-        Export Canvas
-      </button>
     </div>
   );
 };

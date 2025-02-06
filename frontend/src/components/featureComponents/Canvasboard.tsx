@@ -7,7 +7,6 @@ const CanvasBoard: React.FC = () => {
   const canvasRef = useRef<fabric.Canvas | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
-  // const [canvasbackground, setCanvasBackground] = useState<string | null>(null);
 
   // React DND Drop logic
   const [, drop] = useDrop(() => ({
@@ -66,7 +65,7 @@ const CanvasBoard: React.FC = () => {
 
         if (data.imageUrl) {
           setBackgroundImage(`http://localhost:3000${data.imageUrl}`);
-          // setCanvasBackground(`http://localhost:3000${data.imageUrl}`);
+          setCanvasBackground(`http://localhost:3000${data.imageUrl}`);
         }
       } catch (error) {
         console.error("Error fetching floor plan:", error);
@@ -237,9 +236,14 @@ const CanvasBoard: React.FC = () => {
             <div className="text-[10px]">Zoom Out</div>
           </button>
           <input type="file" accept="image/*" onChange={handleFileSelect} />
-          <button onClick={handleUploadBackground} style={{ padding: "10px 20px", backgroundColor: "#28a745", color: "#fff", borderRadius: "5px", cursor: "pointer", width: "200px" }}>
+          <button onClick={handleUploadBackground} style={{ padding: "10px 20px", backgroundColor: "#28a745", color: "#fff", borderRadius: "5px", cursor: "pointer", width: "200px", marginTop: "10px"  }}>
           Upload Floor Plan
         </button>
+        {backgroundImage && (
+          <button onClick={handleRemoveBackground} style={{ padding: "10px 20px", backgroundColor: "#DC3545", color: "#fff", borderRadius: "5px", cursor: "pointer", width: "200px", marginTop: "10px" }}>
+            Remove Background
+          </button>
+        )}
         </div>
       </div>
     </div>
